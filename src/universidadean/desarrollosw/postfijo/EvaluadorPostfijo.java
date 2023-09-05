@@ -29,7 +29,22 @@ public class EvaluadorPostfijo {
     static boolean estaBalanceada(List<String> expresion) {
         Stack<String> delimitadores = new Stack<>();
 
-        // TODO: Escriba el algoritmo del enunciado aquí
+       for (String elemento : expresion) {
+            if (elemento.equals("(") || elemento.equals("[") || elemento.equals("{")) {
+                delimitadores.push(elemento);
+            } else if (elemento.equals(")") || elemento.equals("]") || elemento.equals("}")) {
+                if (delimitadores.isEmpty()) {
+                    return false;
+                }
+
+                String delimitadorAbierto = delimitadores.pop();
+                if ((elemento.equals(")") && !delimitadorAbierto.equals("(")) ||
+                    (elemento.equals("]") && !delimitadorAbierto.equals("[")) ||
+                    (elemento.equals("}") && !delimitadorAbierto.equals("{"))) {
+                    return false;
+                }
+            }
+        }
 
         return delimitadores.isEmpty();
     }
@@ -39,7 +54,14 @@ public class EvaluadorPostfijo {
      * de corchetes ([]) y llaves ({}) por paréntesis ()
      */
     static void reemplazarDelimitadores(List<String> expresion) {
-        // TODO: Escriba el algoritmo aquí
+        for (int i = 0; i < expresion.size(); i++) {
+            String elemento = expresion.get(i);
+            if (elemento.equals("[") || elemento.equals("]")) {
+                expresion.set(i, "(");
+            } else if (elemento.equals("{") || elemento.equals("}")) {
+                expresion.set(i, "(");
+            }
+        }
     }
 
     /**
@@ -50,8 +72,35 @@ public class EvaluadorPostfijo {
     static List<String> convertirAPostfijo(List<String> expresion) {
         Stack<String> pila = new Stack<>();
         List<String> salida = new ArrayList<>();
+        Map<String, Integer> precedencia = new HashMap<>();
+        precedencia.put("+", 1);
+        precedencia.put("-", 1);
+        precedencia.put("*", 2);
+        precedencia.put("/", 2);
 
-        // TODO: Escriba el algoritmo aquí
+        for (String elemento : expresion) {
+            if (elemento.matches("[0-9]+")) {
+                salida.add(elemento);
+            } else if (elemento.equals("(")) {
+                pila.push(elemento);
+            } else if (elemento.equals(")")) {
+                while (!pila.isEmpty() && !pila.peek().equals("(")) {
+                    salida.add(pila.pop());
+                }
+                pila.pop(); // Remove "("
+            } else {
+                while (!pila.isEmpty() && !pila.peek().equals("(") &&
+                       precedencia.containsKey(pila.peek()) &&
+                       precedencia.get(pila.peek()) >= precedencia.get(elemento)) {
+                    salida.add(pila.pop());
+                }
+                pila.push(elemento);
+            }
+        }
+
+        while (!pila.isEmpty()) {
+            salida.add(pila.pop());
+        }
 
         return salida;
     }
@@ -63,8 +112,32 @@ public class EvaluadorPostfijo {
      */
     static int evaluarPostFija(List<String> expresion) {
         Stack<Integer> pila = new Stack<>();
-
-        // TODO: Realiza la evaluación de la expresión en formato postfijo
+        for (String elemento : expresion) {
+            if (elemento.matches("[0-9]+")) {
+                pila.push(Integer.parseInt(elemento));
+            } else {
+                int operand2 = pila.pop();
+                int operand1 = pila.pop();
+                int result;
+                switch (elemento) {
+                    case "+":
+                        result = operand1 + operand2;
+                        break;
+                    case "-":
+                        result = operand1 - operand2;
+                        break;
+                    case "*":
+                        result = operand1 * operand2;
+                        break;
+                    case "/":
+                        result = operand1 / operand2;
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Invalid operator: " + elemento);
+                }
+                pila.push(result);
+            }
+        }
 
         return pila.pop();
     }
